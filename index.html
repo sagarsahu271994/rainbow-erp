@@ -37,11 +37,13 @@ function studentPayload(x){
 
         mobile: x.mobile,
 
+        school_name: x.schoolName,
+
         class: x.className,
 
         batch: x.batch,
 
-        dob: x.date,
+        admission_date: x.date,
 
         address: x.address,
 
@@ -50,7 +52,6 @@ function studentPayload(x){
         paid_fees: 0,
 
         pending_fees: Number(x.fees || 0),
-        school_name: x.schoolName,
 
         status: "Active"
 
