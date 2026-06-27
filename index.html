@@ -22,21 +22,40 @@ function mapAdmissionRow(r){let x=parseRemarks(r.remarks);return {...x,date:r.ad
 function mapFeeRow(r){return {receiptNo:r.receipt_no||'',date:dateOnly(r.created_at),studentName:r.student_id||'',monthly:r.month||'',fees:String(r.amount||0),total:String(r.amount||0),mobile:'',pdfLink:'Generated in ERP'}}
 function mapAttendanceRow(r){return {date:r.attendance_date||'',student:r.student_id||'',className:r.remarks||'',status:r.status||''}}
 function studentPayload(x){
+
     return {
+
         student_id: x.admissionId,
+
         admission_no: x.admissionId,
+
         student_name: x.name,
+
         father_name: x.fatherName,
+
         mother_name: x.motherName,
+
         mobile: x.mobile,
-        school_name: x.schoolName,
-        class_name: x.className,
+
+        class: x.className,
+
         batch: x.batch,
+
+        dob: x.date,
+
         address: x.address,
+
         total_fees: Number(x.fees || 0),
+
         paid_fees: 0,
-        pending_fees: Number(x.fees || 0)
+
+        pending_fees: Number(x.fees || 0),
+        school_name: x.schoolName,
+
+        status: "Active"
+
     };
+
 }
 function admissionPayload(x){return {student_id:x.admissionId||x.studentName||null,admission_date:x.date||today(),remarks:JSON.stringify(x)}}
 function feePayload(x){return {receipt_no:x.receiptNo||null,student_id:x.studentName||null,amount:num(x.total||x.fees),month:x.monthly||null,payment_mode:x.paymentMode||null,transaction_id:x.transactionId||null}}
