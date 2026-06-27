@@ -23,9 +23,7 @@ function mapFeeRow(r){return {receiptNo:r.receipt_no||'',date:dateOnly(r.created
 function mapAttendanceRow(r){return {date:r.attendance_date||'',student:r.student_id||'',className:r.remarks||'',status:r.status||''}}
 function studentPayload(x){
 
-    console.log("studentPayload()", x);
-
-    return {
+    const payload = {
 
         student_id: x.admissionId,
 
@@ -58,6 +56,10 @@ function studentPayload(x){
         status: "Active"
 
     };
+
+    console.log(payload);
+
+    return payload;
 
 }
 function admissionPayload(x){return {student_id:x.admissionId||x.studentName||null,admission_date:x.date||today(),remarks:JSON.stringify(x)}}
