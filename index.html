@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rainbow The Learner Zone ERP</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="locked">
+  <div id="loginScreen" class="auth-screen">
+    <section class="auth-card">
+      <img src="assets/logo.png" alt="Rainbow logo">
+      <h1>Rainbow ERP Login</h1>
+      <p>Login ke baad hi platform open hoga.</p>
+      <form id="loginForm" class="auth-form">
+        <input name="username" placeholder="Username" autocomplete="username" required>
+        <input name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="submit">Login</button>
+        <div id="loginError" class="auth-error">Username ya password galat hai.</div>
+      </form>
+    </section>
+  </div>
+
+  <div class="app">
+    <aside class="side">
+      <div class="brand"><img src="assets/logo.png" alt="Rainbow logo"><div><b>Rainbow</b><span>The Learner Zone</span></div></div>
+      <nav class="nav">
+        <button class="active" data-view="dashboard">Dashboard</button>
+        <button data-view="students">Students</button>
+        <button data-view="admission">Admission</button>
+        <button data-view="fees">Fees Receipt</button>
+        <button data-view="attendance">Attendance</button>
+        <button data-view="reports">Reports</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+      <div class="links">
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/1PDvfoCQOJmx-CCEajbM5tQsUUqU0HnwycyF4EpKQDqA/edit">Student Sheet</a>
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/1V0E8PEWmTJrp2kPi26NbV2qvbM_bQm2BwYReJZrXW28/edit">Admission Sheet</a>
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/190MLxk2zcjE8glS7sdp01oE9tATi71C7LXA1mLpRv88/edit">Fees Sheet</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="top">
+        <div><p class="eyebrow">Admin ERP Platform</p><h1 id="title">Dashboard</h1></div>
+        <div class="top-actions"><span>110/2, Nehru Nagar, Indore</span><button id="backup" class="blue">Export Backup</button><button id="logoutBtn" class="dark">Logout</button></div>
+      </header>
+
+      <section id="dashboard" class="view active">
+        <div class="stats">
+          <article class="stat"><span>Today's Collection</span><strong id="todayCollection">Rs. 0</strong></article>
+          <article class="stat"><span>Total Students</span><strong id="totalStudents">0</strong></article>
+          <article class="stat"><span>Pending Fees</span><strong id="pendingFees">Rs. 0</strong></article>
+          <article class="stat"><span>Today's Attendance</span><strong id="todayAttendance">0</strong></article>
+        </div>
+        <div class="grid2">
+          <section class="panel"><div class="head"><h2>Students Due Today</h2><button id="sendDue" class="red">Send Due</button></div><div id="dueTodayList"></div></section>
+          <section class="panel"><div class="head"><h2>Upcoming Due - Next 7 Days</h2></div><div id="upcomingDueList"></div></section>
+          <section class="panel"><div class="head"><h2>Recent Admissions</h2></div><div id="recentAdmissions"></div></section>
+          <section class="panel"><div class="head"><h2>Recent Fee Collection</h2></div><div id="recentFees"></div></section>
+        </div>
+      </section>
+
+      <section id="students" class="view">
+        <section class="panel"><div class="head"><h2>Students Admin</h2><button id="sample" class="yellow">Load Sample</button></div><div class="searchbar"><input id="studentSearch" data-search="students" placeholder="Search Admission No., Student Name, Mobile, Class"></div><form id="studentForm" class="form three"><input type="hidden" name="id"><input name="admissionId" placeholder="Admission ID" required><input name="name" placeholder="Student Name" required><input name="fees" type="number" min="0" placeholder="Monthly Fees" required><input name="date" type="date" required><input name="className" placeholder="Class" required><input name="mobile" placeholder="Mobile No." required><input name="message" placeholder="Alert Message"><button type="submit" id="studentSubmit">Save Student</button></form></section>
+        <section class="panel"><div class="head"><h2>Student List</h2><button id="studentsCsv" class="blue">Download CSV</button></div><div class="tablewrap"><table><thead><tr><th>Admission ID</th><th>Name</th><th>Monthly Fees</th><th>Admission Date</th><th>Next Due</th><th>Class</th><th>Mobile</th><th>Actions</th></tr></thead><tbody id="studentsTable"></tbody></table></div></section>
+      </section>
+
+      <section id="admission" class="view">
+        <section class="panel"><div class="head"><h2>Admission Admin</h2><button id="nextAdmission" class="yellow">Next ID</button></div><div class="searchbar"><input id="admissionSearch" data-search="admission" placeholder="Search Admission No., Student Name, Mobile, Class"></div><form id="admissionForm" class="form"><input type="hidden" name="id"><input name="date" type="date" required><input name="admissionId" placeholder="Admission ID" required><input name="studentName" placeholder="Student Name" required><input name="fatherName" placeholder="Father Name" required><input name="motherName" placeholder="Mother Name" required><input name="mobile" placeholder="Mobile" required><input name="schoolName" placeholder="School Name"><input name="className" placeholder="Class" required><input name="batch" placeholder="Preferred Batch"><textarea name="address" placeholder="Address"></textarea><button type="submit" id="admissionSubmit">Submit Admission</button></form></section>
+        <section id="admissionDoc" class="doc"></section>
+        <section class="panel"><div class="head"><h2>View Admission</h2></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Admission ID</th><th>Student</th><th>Class</th><th>Mobile</th><th>Actions</th></tr></thead><tbody id="admissionTable"></tbody></table></div></section>
+      </section>
+
+      <section id="fees" class="view">
+        <section class="panel"><div class="head"><h2>Collect Fees</h2><button id="nextReceipt" class="yellow">Next Receipt</button></div><div class="searchbar"><input id="feesSearch" data-search="fees" placeholder="Search Receipt, Student Name, Mobile, Class"></div><form id="feesForm" class="form three"><input type="hidden" name="id"><input name="receiptNo" placeholder="Receipt No." required><input name="date" type="date" required><input name="studentName" placeholder="Student Name" required><input name="className" placeholder="Class"><input name="monthly" type="number" min="0" placeholder="Monthly Fees" required><input name="fees" type="number" min="0" placeholder="Paid Fees" required><input name="total" type="number" min="0" placeholder="Total Fees" required><input name="mobile" placeholder="WhatsApp Mobile"><button type="submit" id="feesSubmit">Submit Receipt</button></form></section>
+        <section id="receiptDoc" class="doc"></section>
+        <section class="panel"><div class="head"><h2>Fee History</h2><button id="feesCsv" class="blue">Download CSV</button></div><div class="tablewrap"><table><thead><tr><th>Receipt No.</th><th>Date</th><th>Student</th><th>Class</th><th>Monthly</th><th>Paid</th><th>Total</th><th>Actions</th></tr></thead><tbody id="feesTable"></tbody></table></div></section>
+      </section>
+
+      <section id="attendance" class="view">
+        <section class="panel"><div class="head"><h2>Daily Attendance</h2><input id="attendanceDate" type="date"></div><div class="searchbar"><input id="attendanceSearch" data-search="attendance" placeholder="Search Admission No., Student Name, Mobile, Class"></div><div id="attendanceList"></div></section>
+        <section class="panel"><div class="head"><h2>Attendance Records</h2><button id="attendanceCsv" class="blue">Download CSV</button></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Student</th><th>Class</th><th>Status</th><th>Actions</th></tr></thead><tbody id="attendanceTable"></tbody></table></div></section>
+      </section>
+
+      <section id="reports" class="view">
+        <div class="searchbar"><input id="reportSearch" data-search="reports" placeholder="Search Admission No., Student Name, Mobile, Class"></div>
+        <div class="grid2"><section class="panel"><h2>Student Report</h2><p id="studentReport"></p></section><section class="panel"><h2>Monthly Fees</h2><p id="feesReport"></p></section><section class="panel"><h2>Attendance Report</h2><p id="attendanceReport"></p></section><section class="panel"><h2>Pending Fees Report</h2><p id="monthlyReport"></p></section></div>
+      </section>
+
+      <section id="settings" class="view"><section class="panel"><div class="head"><h2>Institute Details</h2><button id="saveSettings" class="red">Save</button></div><form id="settingsForm" class="form"><input name="name" value="Rainbow The Learner Zone"><input name="address" value="110/2, Nehru Nagar, Indore"><input name="session" value="2026-27"><input name="classes" value="Nursery, KG, 1st, 2nd, 3rd, 4th, 5th"><input name="subjects" value="All Subjects"><input name="appsScriptUrl" placeholder="Apps Script Web App URL"><input name="supabaseUrl" placeholder="Supabase URL" value="https://vlgoqihzrrckjpbyfbhl.supabase.co"><input name="supabaseKey" placeholder="Supabase anon key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZ29xaWh6cnJja2pwYnlmYmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MzkzMTYsImV4cCI6MjA5ODExNTMxNn0.FKchXI87PRlhZB7f3_xmbmg1B6rRdUmrNSeA66IIArc"></form><p class="muted">Supabase settings save rahengi. Database connection ko yahan se disconnect nahi kiya jata.</p></section></section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal"><div class="modal-card"><button id="modalClose" class="modal-close">Close</button><div id="modalBody"></div></div></div>
+  <div id="toast" class="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
