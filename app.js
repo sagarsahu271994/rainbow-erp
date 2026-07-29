@@ -336,8 +336,23 @@ function deleteAttendance(id) { if (!confirm("Attendance delete karna hai?")) re
 function markAttendance(studentId, status) { const s = db.students.find((x) => x.id === studentId); const date = $("#attendanceDate").value || today(); db.attendance = db.attendance.filter((a) => !(a.date === date && a.studentId === studentId)); const entry = { id: uid(), studentId, date, student: s.name, className: s.className, status }; db.attendance.push(entry); upsertSupabase("attendance", entry); save(); toast(s.name + ": " + status); }
 function csv(name, rows) { const data = rows.map((row) => row.map((cell) => '"' + String(cell ?? "").replaceAll('"', '""') + '"').join(",")).join("\n"); const blob = new Blob([data], { type: "text/csv;charset=utf-8" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = name; link.click(); URL.revokeObjectURL(link.href); }
 function fillFeeFromStudentName() { const form = $("#feesForm"); const s = studentByName(form.elements.studentName.value); if (!s) return; form.elements.className.value = s.className; form.elements.mobile.value = s.mobile; form.elements.monthly.value = s.fees; if (!form.elements.fees.value) form.elements.fees.value = s.fees; if (!form.elements.total.value) form.elements.total.value = s.fees; }
-function navigateView(id, title) { $('.view').forEach((view) => view.classList.toggle('active', view.id === id)); $('.nav button').forEach((nav) => nav.classList.toggle('active', nav.dataset.view === id)); $('#title').textContent = title || id; render(); }
-$('[data-view], [data-go]').forEach((button) => { button.onclick = () => navigateView(button.dataset.view || button.dataset.go, button.textContent); });
+function navigateView(id, title) {
+  $$('.view').forEach((view) =>
+    view.classList.toggle('active', view.id === id)
+  );
+
+  $$('.nav button').forEach((nav) =>
+    nav.classList.toggle('active', nav.dataset.view === id)
+  );
+
+  $('#title').textContent = title || id;
+  render();
+}
+
+$$('[data-view], [data-go]').forEach((button) => {
+  button.onclick = () =>
+    navigateView(button.dataset.view || button.dataset.go, button.textContent);
+});
 $$('[data-search]').forEach((input) => { input.oninput = () => { filters[input.dataset.search] = input.value; render(); }; });
 $('#modalClose').onclick = () => $('#modal').classList.remove('show');
 $('#loginForm').onsubmit = doLogin; $('#logoutBtn').onclick = doLogout;
