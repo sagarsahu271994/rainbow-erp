@@ -88,6 +88,9 @@ App.Dashboard = {
     }).filter(row => row.isPending);
   },
 
+  closedAlerts: new Set(),
+  showClosedAlerts: false,
+
   filterPendingStudents() {
     const search = App.norm(App.$('#pendingSearch')?.value || '');
     const month = App.$('#pendingMonthFilter')?.value || 'all';
@@ -96,8 +99,22 @@ App.Dashboard = {
       const dueMonth = row.dueDate ? App.monthKey(App.todayFromDate(row.dueDate)) : '';
       const matchesSearch = !search || [s.name, s.className, s.mobile, s.admissionId].some(v => App.norm(v).includes(search));
       const matchesMonth = month === 'all' || dueMonth === month;
-      return matchesSearch && matchesMonth;
+      const isClosed = this.closedAlerts.has(s.id);
+      const matchesAlertState = this.showClosedAlerts ? isClosed : !isClosed;
+      return matchesSearch && matchesMonth && matchesAlertState;
     });
+  },
+
+  toggleAlertClosed(id) {
+    if (this.closedAlerts.has(id)) this.closedAlerts.delete(id); else this.closedAlerts.add(id);
+    this.renderPendingTable();
+  },
+
+  toggleShowClosedAlerts() {
+    this.showClosedAlerts = !this.showClosedAlerts;
+    const btn = App.$('#pendingShowClosed');
+    if (btn) btn.textContent = this.showClosedAlerts ? 'Show Active Alerts' : 'Show Closed Alerts';
+    this.renderPendingTable();
   },
 
   searchPendingStudents() {
@@ -121,13 +138,14 @@ App.Dashboard = {
   openPendingFeesModal() {
     const allRows = this.pendingRows();
     const summary = this.pendingSummary(allRows);
-    App.$('#modalBody').innerHTML = '<section class="pending-modal"><div class="pending-hero"><div><h2>Pending Fees</h2><p>Review, search, remind and export pending fee records.</p></div><button id="pendingPdfBtn" class="red" type="button">Export PDF</button></div><div class="pending-summary-grid"><article class="pending-summary-card"><span>Total Pending</span><strong id="pendingModalAmount">' + this.money(summary.allTotal) + '</strong></article><article class="pending-summary-card"><span>Students Pending</span><strong id="pendingModalCount">' + summary.allCount + '</strong></article><article class="pending-summary-card"><span>Overdue</span><strong id="pendingModalOverdue">' + summary.overdue + '</strong></article><article class="pending-summary-card"><span>Showing</span><strong id="pendingModalShowing">' + summary.allCount + '</strong></article></div><div class="pending-toolbar"><input id="pendingSearch" type="search" placeholder="Search student, class, mobile or admission no."><select id="pendingMonthFilter">' + this.pendingOptions(allRows) + '</select><div class="pending-bulk-actions"><button id="pendingAllWa" type="button">WhatsApp All</button><button id="pendingAllShare" class="blue" type="button">Share All</button><button id="pendingAllCopy" class="ghost" type="button">Copy All</button></div></div><div id="pendingFeesResults" class="pending-results"></div></section>';
+    App.$('#modalBody').innerHTML = '<section class="pending-modal"><div class="pending-hero"><div><h2>Pending Fees</h2><p>Review, search, remind and export pending fee records.</p></div><button id="pendingPdfBtn" class="red" type="button">Export PDF</button></div><div class="pending-summary-grid"><article class="pending-summary-card"><span>Total Pending</span><strong id="pendingModalAmount">' + this.money(summary.allTotal) + '</strong></article><article class="pending-summary-card"><span>Students Pending</span><strong id="pendingModalCount">' + summary.allCount + '</strong></article><article class="pending-summary-card"><span>Overdue</span><strong id="pendingModalOverdue">' + summary.overdue + '</strong></article><article class="pending-summary-card"><span>Showing</span><strong id="pendingModalShowing">' + summary.allCount + '</strong></article></div><div class="pending-toolbar"><input id="pendingSearch" type="search" placeholder="Search student, class, mobile or admission no."><select id="pendingMonthFilter">' + this.pendingOptions(allRows) + '</select><div class="pending-bulk-actions"><button id="pendingAllWa" type="button">WhatsApp All</button><button id="pendingAllShare" class="blue" type="button">Share All</button><button id="pendingAllCopy" class="ghost" type="button">Copy All</button><button id="pendingShowClosed" class="dark" type="button">' + (this.showClosedAlerts ? 'Show Active Alerts' : 'Show Closed Alerts') + '</button></div></div><div id="pendingFeesResults" class="pending-results"></div></section>';
     App.$('#modal').classList.add('show');
     App.$('#pendingSearch').oninput = () => this.searchPendingStudents();
     App.$('#pendingMonthFilter').onchange = () => this.renderPendingTable();
     App.$('#pendingAllWa').onclick = () => this.whatsappAllPending();
     App.$('#pendingAllShare').onclick = () => this.shareAllPending();
     App.$('#pendingAllCopy').onclick = () => this.copyAllPending();
+    App.$('#pendingShowClosed').onclick = () => this.toggleShowClosedAlerts();
     App.$('#pendingPdfBtn').onclick = () => this.exportPendingPDF();
     if (this.pendingResizeHandler) window.removeEventListener('resize', this.pendingResizeHandler);
     this.pendingResizeHandler = () => {
@@ -161,14 +179,16 @@ App.Dashboard = {
       const id = App.esc(s.id);
       const overdue = row.dueDate && row.dueDate < today;
       const status = overdue ? 'Overdue' : 'Due';
-      return '<tr><td><b>' + App.esc(s.name) + '</b><br><small>' + App.esc(s.admissionId || '-') + '</small></td><td>' + App.esc(s.className || '-') + '</td><td>' + App.esc(s.mobile || '-') + '</td><td>' + (row.dueDate ? App.fmt(row.dueDate) : '-') + '</td><td><b>' + this.money(row.pendingAmount) + '</b></td><td><span class="status-badge ' + (overdue ? 'overdue' : 'due') + '">' + status + '</span></td><td><div class="pending-row-actions"><button data-pending-wa="' + id + '">WhatsApp</button><button class="blue" data-pending-share="' + id + '">Share</button><button class="ghost" data-pending-copy="' + id + '">Copy</button></div></td></tr>';
+      const closed = this.closedAlerts.has(s.id);
+      return '<tr><td><b>' + App.esc(s.name) + '</b><br><small>' + App.esc(s.admissionId || '-') + '</small></td><td>' + App.esc(s.className || '-') + '</td><td>' + App.esc(s.mobile || '-') + '</td><td>' + (row.dueDate ? App.fmt(row.dueDate) : '-') + '</td><td><b>' + this.money(row.pendingAmount) + '</b></td><td><span class="status-badge ' + (overdue ? 'overdue' : 'due') + '">' + status + '</span></td><td><div class="pending-row-actions"><button data-pending-wa="' + id + '">WhatsApp</button><button class="blue" data-pending-share="' + id + '">Share</button><button class="ghost" data-pending-copy="' + id + '">Copy</button><button class="ghost" data-pending-toggle-close="' + id + '">' + (closed ? 'Reopen Alert' : 'Close Alert') + '</button></div></td></tr>';
     }).join('');
     const cardHtml = rows.map(row => {
       const s = row.student;
       const id = App.esc(s.id);
       const overdue = row.dueDate && row.dueDate < today;
       const status = overdue ? 'Overdue' : 'Due';
-      return '<article class="pending-card"><div class="pending-card-head"><div><b>' + App.esc(s.name) + '</b><small>' + App.esc(s.admissionId || '-') + '</small></div><span class="status-badge ' + (overdue ? 'overdue' : 'due') + '">' + status + '</span></div><div class="pending-card-grid"><div><span>Class</span><strong>' + App.esc(s.className || '-') + '</strong></div><div><span>Mobile</span><strong>' + App.esc(s.mobile || '-') + '</strong></div><div><span>Due Date</span><strong>' + (row.dueDate ? App.fmt(row.dueDate) : '-') + '</strong></div><div><span>Pending</span><strong>' + this.money(row.pendingAmount) + '</strong></div></div><div class="pending-row-actions"><button data-pending-wa="' + id + '">WhatsApp</button><button class="blue" data-pending-share="' + id + '">Share</button><button class="ghost" data-pending-copy="' + id + '">Copy</button></div></article>';
+      const closed = this.closedAlerts.has(s.id);
+      return '<article class="pending-card"><div class="pending-card-head"><div><b>' + App.esc(s.name) + '</b><small>' + App.esc(s.admissionId || '-') + '</small></div><span class="status-badge ' + (overdue ? 'overdue' : 'due') + '">' + status + '</span></div><div class="pending-card-grid"><div><span>Class</span><strong>' + App.esc(s.className || '-') + '</strong></div><div><span>Mobile</span><strong>' + App.esc(s.mobile || '-') + '</strong></div><div><span>Due Date</span><strong>' + (row.dueDate ? App.fmt(row.dueDate) : '-') + '</strong></div><div><span>Pending</span><strong>' + this.money(row.pendingAmount) + '</strong></div></div><div class="pending-row-actions"><button data-pending-wa="' + id + '">WhatsApp</button><button class="blue" data-pending-share="' + id + '">Share</button><button class="ghost" data-pending-copy="' + id + '">Copy</button><button class="ghost" data-pending-toggle-close="' + id + '">' + (closed ? 'Reopen Alert' : 'Close Alert') + '</button></div></article>';
     }).join('');
     target.innerHTML = useCards
       ? '<div class="pending-card-list">' + cardHtml + '</div>'
@@ -176,6 +196,7 @@ App.Dashboard = {
     App.$$('[data-pending-wa]').forEach(btn => btn.onclick = () => this.whatsappPending(btn.dataset.pendingWa));
     App.$$('[data-pending-share]').forEach(btn => btn.onclick = () => this.sharePending(btn.dataset.pendingShare));
     App.$$('[data-pending-copy]').forEach(btn => btn.onclick = () => this.copyPending(btn.dataset.pendingCopy));
+    App.$$('[data-pending-toggle-close]').forEach(btn => btn.onclick = () => this.toggleAlertClosed(btn.dataset.pendingToggleClose));
   },
 
   whatsappPending(id) {
