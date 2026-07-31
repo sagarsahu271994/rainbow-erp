@@ -16,6 +16,7 @@
 .status-badge.paid{background:#e7f7ec;color:#21743a}
 .status-badge.partial{background:#fff4d8;color:#7a4f00}
 .status-badge.pending{background:#ffe8ee;color:#b31334}
+.status-badge.unset{background:#eef2f5;color:#57606a}
 
 /* Tablet (768px–1100px): stack toolbar controls (Search / Month / Buttons) */
 @media(max-width:1100px){
@@ -24,7 +25,7 @@
 }
 
 /* Profile fees-summary card, reuses pending-summary-card visual language */
-.profile-fees-card{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.profile-fees-card{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
 .profile-fees-card div{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:10px}
 .profile-fees-card span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
 .profile-fees-card strong{display:block;font-size:15px;overflow-wrap:anywhere}
@@ -67,4 +68,10 @@
   .item button{width:100%;min-height:44px}
   .compact{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .compact table{min-width:520px}
+
+  /* Admission form: single column, touch-friendly, full-width submit */
+  #admissionForm,#admissionForm.form,#admissionForm.form.three{grid-template-columns:1fr;gap:14px}
+  #admissionForm input,#admissionForm select,#admissionForm textarea{width:100%;min-width:0;min-height:48px;font-size:16px;padding:12px 13px}
+  #admissionForm input[type=date],#admissionForm input[type=number]{display:block;width:100%;min-width:0}
+  #admissionForm button,#admissionSubmit{width:100%;min-height:48px;font-weight:700}
 }
