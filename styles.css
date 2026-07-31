@@ -6,3 +6,65 @@
 .pending-results{min-width:0}.pending-card-list{display:grid;gap:12px;max-height:62vh;overflow:auto}.pending-card{display:grid;gap:12px;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px;box-shadow:0 8px 22px #24344510}.pending-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.pending-card-head b{display:block;font-size:16px;line-height:1.25;overflow-wrap:anywhere}.pending-card-head small{display:block;color:var(--muted);font-weight:700;margin-top:3px;overflow-wrap:anywhere}.pending-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pending-card-grid div{min-width:0;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:10px}.pending-card-grid span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}.pending-card-grid strong{display:block;font-size:14px;overflow-wrap:anywhere}.status-badge{white-space:nowrap}@media(max-width:768px){.pending-hero{flex-direction:column}.pending-summary-grid,.pending-toolbar{grid-template-columns:1fr}.pending-bulk-actions,.pending-row-actions{justify-content:flex-start}.pending-bulk-actions button,.pending-row-actions button{flex:1 1 110px}.pending-card-grid{grid-template-columns:1fr}.modal-card{width:96vw;padding:16px;overflow-x:hidden}}
 
 .fees-card-list{display:none}.fees-history-wrap,.tablewrap:has(#feesTable){overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.fees-history-wrap table,.tablewrap:has(#feesTable) table{min-width:860px}@media(max-width:767.98px){html,body{max-width:100%;overflow-x:hidden}.panel:has(#feesForm){padding:16px}.panel:has(#feesForm)>.head{align-items:stretch;flex-direction:column;gap:12px;margin-bottom:16px}.panel:has(#feesForm)>.head h2{font-size:20px;line-height:1.25}.panel:has(#feesForm)>.head button{width:100%;min-height:46px}.panel:has(#feesForm)>.head .actions,.panel:has(#feesForm)>.head>div{width:100%;display:grid;gap:10px}#feesForm,#feesForm.form,#feesForm.form.three{grid-template-columns:1fr;gap:14px}#feesForm input,#feesForm select,#feesForm textarea{width:100%;min-width:0;min-height:48px;font-size:16px;padding:12px 13px}#feesForm input[type=date]{display:block;width:100%;min-width:0}#feesForm button,#feesSubmit{width:100%;min-height:48px;font-weight:700}.fees-history-wrap,.tablewrap:has(#feesTable){display:none}.fees-card-list{display:grid;gap:12px;margin-top:12px}.fees-card{display:grid;gap:12px;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px;box-shadow:0 8px 22px #24344510}.fees-card-head{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fees-card-head>div,.fees-card-grid>div{min-width:0;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:10px}.fees-card span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}.fees-card strong,.fees-card b,.fees-card small{overflow-wrap:anywhere}.fees-card strong{display:block;font-size:14px;line-height:1.3}.fees-card-student{display:grid;gap:3px}.fees-card-student b{font-size:17px;line-height:1.25}.fees-card-student small{color:var(--muted);font-size:14px;font-weight:700}.fees-card-grid{display:grid;grid-template-columns:1fr;gap:10px}.fees-card-actions{display:grid;grid-template-columns:1fr;gap:9px}.fees-card-actions button{width:100%;min-height:46px;font-size:14px;font-weight:700;margin:0}.searchbar{margin-bottom:16px}.searchbar input{min-height:48px;font-size:16px}}@media(min-width:768px) and (max-width:1100px){.fees-history-wrap,.tablewrap:has(#feesTable){overflow-x:auto;-webkit-overflow-scrolling:touch}.fees-history-wrap table,.tablewrap:has(#feesTable) table{min-width:860px}}
+
+/* ============================================================
+   Responsive enhancements — Pending Fees Modal + Student Profile
+   Desktop (>1100px) layout is unchanged by this block.
+   ============================================================ */
+
+/* Extra status badge tones reused by profile fees summary */
+.status-badge.paid{background:#e7f7ec;color:#21743a}
+.status-badge.partial{background:#fff4d8;color:#7a4f00}
+.status-badge.pending{background:#ffe8ee;color:#b31334}
+
+/* Tablet (768px–1100px): stack toolbar controls (Search / Month / Buttons) */
+@media(max-width:1100px){
+  .pending-toolbar{grid-template-columns:1fr}
+  .pending-bulk-actions{justify-content:flex-start}
+}
+
+/* Profile fees-summary card, reuses pending-summary-card visual language */
+.profile-fees-card{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.profile-fees-card div{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:10px}
+.profile-fees-card span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.profile-fees-card strong{display:block;font-size:15px;overflow-wrap:anywhere}
+.profile-details-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px;margin-bottom:14px}
+
+@media(max-width:1100px){
+  .profile-fees-card{grid-template-columns:1fr 1fr}
+}
+
+/* Mobile (<768px) */
+@media(max-width:767.98px){
+  html,body{overflow-x:hidden;max-width:100%}
+
+  /* Feature 1: full-screen pending fees / any modal on small screens */
+  .modal{padding:0}
+  .modal-card{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:16px;margin:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .modal-close{min-height:44px}
+
+  .pending-hero{flex-direction:column;align-items:stretch}
+  .pending-hero button{width:100%;min-height:44px}
+
+  .pending-toolbar{grid-template-columns:1fr;gap:12px}
+  .pending-toolbar input,.pending-toolbar select{min-height:48px;font-size:16px}
+
+  .pending-bulk-actions{grid-column:1/-1;flex-direction:column;align-items:stretch}
+  .pending-bulk-actions button{width:100%;min-height:44px}
+
+  .pending-row-actions{flex-direction:row;flex-wrap:wrap}
+  .pending-row-actions button{flex:1 1 120px;min-height:44px}
+
+  .pending-card{overflow-wrap:anywhere}
+
+  /* Student profile: stacked cards, no overlap/clipping */
+  .profile-grid{grid-template-columns:1fr;gap:10px}
+  .profile-grid div{overflow-wrap:anywhere}
+  .profile-grid button{width:100%;min-height:44px}
+  .profile-fees-card{grid-template-columns:1fr}
+  .profile-section-title{font-size:16px}
+  .item{grid-template-columns:1fr;justify-items:start}
+  .item button{width:100%;min-height:44px}
+  .compact{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .compact table{min-width:520px}
+}
