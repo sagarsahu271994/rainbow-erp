@@ -1,16 +1,17 @@
-App.Pdf={header(title){return '<div class="doch"><img src="'+App.logoPath+'" alt=""><div><h2>'+App.esc(App.db.settings.name)+'</h2><p>'+App.esc(App.db.settings.address)+'</p><b>'+App.esc(title)+'</b></div></div>'},
+App.Pdf={
+
+header(title){return '<div class="doch"><img src="'+App.logoPath+'" alt=""><div><h2>'+App.esc(App.db.settings.name)+'</h2><p>'+App.esc(App.db.settings.address)+'</p><b>'+App.esc(title)+'</b></div></div>'},
 
 admissionHtml(a){return this.header("Admission Form")+'<div class="docgrid"><div><b>Date:</b> '+App.esc(a.date)+'</div><div><b>Admission ID:</b> '+App.esc(a.admissionId)+'</div><div><b>Student:</b> '+App.esc(a.studentName)+'</div><div><b>Class:</b> '+App.esc(a.className)+'</div><div><b>Father:</b> '+App.esc(a.fatherName)+'</div><div><b>Mother:</b> '+App.esc(a.motherName)+'</div><div><b>Mobile:</b> '+App.esc(a.mobile)+'</div><div><b>School:</b> '+App.esc(a.schoolName||"-")+'</div><div><b>Batch:</b> '+App.esc(a.batch||"-")+'</div><div><b>Address:</b> '+App.esc(a.address||"-")+'</div></div><div class="signature-row"><div>Parent Signature</div><div>Authorized Signature</div></div>'},
 
 /**
- * FEATURE 8 — Professional Fee Receipt.
- * Rainbow ERP branding (via header()), Receipt Number, Student Details
- * (name, class, admission number when available), Payment Details (mode,
- * monthly/paid/total, transaction id, remarks when present), School Details
- * (via header()), and a QR placeholder reserved for a future real QR code
- * (e.g. payment verification link) without changing the PDF layout later.
- * Admission Number and Remarks are optional — receipts created from the
- * older manual Fees form won't have them and those lines are simply omitted.
+ * Professional Fee Receipt — Rainbow ERP branding (via header()), Receipt
+ * Number, Student Details (name, class, admission number when available),
+ * Payment Details (mode, monthly/paid/total, transaction id, remarks when
+ * present), School Details (via header()), and a QR placeholder reserved
+ * for a future real QR code without changing this layout later.
+ * Admission Number and Remarks are optional — receipts created without
+ * them simply omit those lines.
  * @param {object} f fee receipt item
  * @returns {string}
  */
@@ -34,6 +35,170 @@ receiptHtml(f){
     +'</div>'
     +'<div class="doc-footer-row" style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;">'
     +'<div class="seal">Rainbow<br>Seal</div>'
+    +'<div style="width:90px;height:90px;border:1px dashed #9aa5b1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#657386;text-align:center;line-height:1.3;">QR Code<br>(Coming Soon)</div>'
+    +'</div>'
+    +'<div class="signature-row"><div>Received By</div><div>Authorized Signature</div></div>';
+},
+
+/**
+ * Builds a real PDF Blob from HTML using the html2pdf worker chain
+ * (never outputPdf("blob")). Renders from a visible, attached, A4-width,
+ * white-background temporary element — display:none, zero size, or a
+ * detached node all produce a blank capture, so every one of those is
+ * explicitly guarded against. Waits two animation frames plus a short
+ * settle delay before capture so layout/fonts/images are actually painted.
+ * @param {string} title
+ * @param {string} html
+ * @returns {Promise<Blob|null>}
+ */
+async blob(title,html){
+  const wrap=document.createElement("div");
+  wrap.className="pdf-page";
+  wrap.innerHTML='<section class="doc ready">'+html+'</section>';
+  wrap.style.position="fixed";
+  wrap.style.left="0";
+  wrap.style.top="0";
+  wrap.style.margin="0";
+  wrap.style.padding="0";
+  wrap.style.width="210mm";
+  wrap.style.minHeight="1px";
+  wrap.style.background="#ffffff";
+  wrap.style.zIndex="-1";
+  wrap.style.opacity="1";
+  wrap.style.display="block";
+  wrap.style.visibility="visible";
+  wrap.style.overflow="visible";
+  wrap.style.pointerEvents="none";
+  document.body.appendChild(wrap);
+
+  const target=wrap.querySelector(".doc")||wrap;
+  target.style.display="block";
+  target.style.visibility="visible";
+  target.style.opacity="1";
+  target.style.background="#ffffff";
+  target.style.width="210mm";
+
+  try{
+    if(!window.html2pdf)return null;
+    if(!document.body.contains(wrap))return null;
+
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    await new Promise(r=>setTimeout(r,150));
+
+    if(target.offsetWidth===0||target.offsetHeight===0){
+      console.warn("App.Pdf.blob: target has zero size — aborting instead of producing a blank PDF");
+      return null;
+    }
+
+    const worker=window.html2pdf().set({
+      margin:10,
+      filename:App.fileName(title)+".pdf",
+      image:{type:"jpeg",quality:.98},
+      html2canvas:{
+        scale:2,
+        useCORS:true,
+        allowTaint:false,
+        backgroundColor:"#ffffff",
+        logging:false,
+        foreignObjectRendering:false,
+        windowWidth:target.scrollWidth||target.offsetWidth,
+        scrollX:0,
+        scrollY:0
+      },
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+    }).from(target);
+
+    return await worker.toCanvas().toPdf().output("blob");
+  }finally{
+    wrap.remove();
+  }
+},
+
+openPrint(title,html){
+  const w=window.open("","_blank","width=900,height=1100");
+  if(!w){App.toast("Popup blocked");return}
+  w.document.write('<!doctype html><html><head><title>'+App.esc(title)+'</title><link rel="stylesheet" href="styles.css"><style>@page{size:A4;margin:10mm}body{background:#fff}.doc{display:block!important;border:0;box-shadow:none}</style></head><body><section class="doc ready">'+html+'</section></body></html>');
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print()},350);
+},
+
+async ensure(type,item,title,html,file){
+  if(item.pdfUrl)return item.pdfUrl;
+  const b=await this.blob(title,html);
+  if(!b){this.openPrint(title,html);return ""}
+  try{
+    const url=await App.Storage.upload(type,item,b,file);
+    if(url)App.toast("PDF Supabase Storage me save ho gayi");
+    return url;
+  }catch(e){
+    console.warn(e);
+    App.toast("PDF Storage issue: documents bucket/policy check karein");
+    return "";
+  }
+},
+
+async download(type,item,title,html,file){
+  await this.ensure(type,item,title,html,file);
+  const b=await this.blob(title,html);
+  if(!b)return this.openPrint(title,html);
+  const u=URL.createObjectURL(b),a=document.createElement("a");
+  a.href=u;a.download=file;a.click();
+  URL.revokeObjectURL(u);
+},
+
+async preview(type,item,title,html,file){
+  const u=await this.ensure(type,item,title,html,file);
+  u?window.open(u,"_blank"):this.openPrint(title,html);
+},
+
+async share(type,item,title,html,file){
+  const url=await this.ensure(type,item,title,html,file);
+  const b=await this.blob(title,html);
+  if(b&&navigator.share){
+    const f=new File([b],file,{type:"application/pdf"});
+    if(!navigator.canShare||navigator.canShare({files:[f]})){
+      try{
+        await navigator.share({title,text:title+" - "+(item.studentName||"")+(url?"\n"+url:""),files:[f]});
+        return;
+      }catch(e){if(e.name==="AbortError")return}
+    }
+  }
+  if(url&&navigator.share){
+    try{await navigator.share({title,text:title,url});return}catch(e){}
+  }
+  url?window.open(url,"_blank"):App.toast("Share support available nahi hai");
+},
+
+/**
+ * Shared action bar for both Admission and Receipt docs: Save PDF, Print,
+ * Preview, Share, WhatsApp.
+ */
+actions(target,item,type,html){
+  const title=type==="admission"?"Admission Form":"Fees Receipt";
+  const file=App.fileName((type==="admission"?item.admissionId:item.receiptNo)+"-"+item.studentName)+".pdf";
+  App.$(target).insertAdjacentHTML("beforeend",'<div class="actions"><button class="blue" id="'+type+'SavePdf">Save PDF</button><button class="ghost" id="'+type+'Print">Print</button><button class="ghost" id="'+type+'Preview">Preview</button><button class="green" id="'+type+'Share">Share</button><button id="'+type+'Wa">WhatsApp</button></div>');
+  App.$('#'+type+'SavePdf').onclick=()=>this.download(type,item,title,html,file);
+  App.$('#'+type+'Print').onclick=()=>this.openPrint(title,html);
+  App.$('#'+type+'Preview').onclick=()=>this.preview(type,item,title,html,file);
+  App.$('#'+type+'Share').onclick=()=>this.share(type,item,title,html,file);
+  App.$('#'+type+'Wa').onclick=()=>App.whatsapp(item.mobile,type==="admission"?"Admission Form: "+item.studentName+", ID "+item.admissionId:"Receipt "+item.receiptNo+": "+item.studentName+" ki fees "+App.rs(item.total)+" receive ho gayi. - Rainbow The Learner Zone");
+},
+
+showAdmission(a){
+  const h=this.admissionHtml(a);
+  App.$("#admissionDoc").className="doc ready";
+  App.$("#admissionDoc").innerHTML=h;
+  this.actions("#admissionDoc",a,"admission",h);
+},
+
+showReceipt(f){
+  const h=this.receiptHtml(f);
+  App.$("#receiptDoc").className="doc ready";
+  App.$("#receiptDoc").innerHTML=h;
+  this.actions("#receiptDoc",f,"fees",h);
+}
+
+};
     +'<div style="width:90px;height:90px;border:1px dashed #9aa5b1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#657386;text-align:center;line-height:1.3;">QR Code<br>(Coming Soon)</div>'
     +'</div>'
     +'<div class="signature-row"><div>Received By</div><div>Authorized Signature</div></div>';
