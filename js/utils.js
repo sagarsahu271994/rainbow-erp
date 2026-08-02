@@ -7,5 +7,45 @@ App.saveLocal=()=>localStorage.setItem(App.STORE_KEY,JSON.stringify(App.db));App
 App.matches=(item,q,keys)=>!App.norm(q)||keys.some(k=>App.norm(item[k]).includes(App.norm(q)));App.studentById=id=>App.db.students.find(s=>s.id===id||s.studentId===id);App.studentByName=n=>App.db.students.find(s=>App.norm(s.name)===App.norm(n));App.studentByAdmission=id=>App.db.students.find(s=>App.norm(s.admissionId)===App.norm(id));App.monthKey=d=>String(d||App.today()).slice(0,7);App.sameMonth=(a,b)=>App.monthKey(a)===App.monthKey(b);
 App.addMonths=(date,months)=>{const d=App.parseDate(date);if(!d)return null;const day=d.getDate();const r=new Date(d.getFullYear(),d.getMonth()+months,1);const last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();r.setDate(Math.min(day,last));return r};App.nextDueDate=s=>{const ad=App.parseDate(s.date);if(!ad)return null;const now=App.parseDate(App.today());let m=Math.max(1,(now.getFullYear()-ad.getFullYear())*12+now.getMonth()-ad.getMonth());let due=App.addMonths(s.date,m);if(due<now&&!App.sameMonth(App.todayFromDate(due),App.today()))due=App.addMonths(s.date,m+1);return due};App.feePaidForMonth=(s,d)=>App.db.fees.some(f=>(f.studentId===s.id||App.norm(f.studentName)===App.norm(s.name))&&App.sameMonth(f.date,App.todayFromDate(d)));App.pendingStudents=()=>App.db.students.filter(s=>{const d=App.nextDueDate(s);return d&&App.todayFromDate(d)<=App.today()&&!App.feePaidForMonth(s,d)});
 App.refreshStudentFeeTotals=sid=>{const s=App.studentById(sid)||App.studentByName(sid);if(!s)return;const paid=App.db.fees.filter(f=>f.studentId===s.id||App.norm(f.studentName)===App.norm(s.name)).reduce((a,f)=>a+App.num(f.total||f.fees),0);s.paidFees=paid;s.pendingFees=Math.max(App.num(s.fees)-paid,0);App.Supabase.upsert("students",s)};App.whatsapp=(mobile,text)=>{let n=String(mobile||"").replace(/D/g,"");if(n.length===10)n="91"+n;window.open("https://wa.me/"+n+"?text="+encodeURIComponent(text),"_blank")};App.reminderText=s=>"Dear Parent, "+s.name+" ("+s.className+") ki fees due hai. Kripya fees jama karein. - Rainbow The Learner Zone";
+
+/**
+ * Whole-day difference between a target date string (yyyy-mm-dd) and today.
+ * Negative = past, 0 = today, positive = future. Returns null if date is invalid.
+ * Used by Dashboard Alerts (Feature 1) to isolate yesterday/today/tomorrow only.
+ * @param {string} dateStr
+ * @returns {number|null}
+ */
+App.daysDiff=dateStr=>{
+  const target=App.parseDate(dateStr instanceof Date?App.todayFromDate(dateStr):dateStr);
+  const now=App.parseDate(App.today());
+  if(!target||!now)return null;
+  return Math.round((target.getTime()-now.getTime())/86400000);
+};
+
+/**
+ * True only when a due date falls within the Alerts window: yesterday, today, or tomorrow.
+ * Does NOT check pending amount / paid status on its own — callers (Dashboard) must
+ * additionally confirm pending_fees > 0 and status !== 'Paid' before treating it as an alert.
+ * @param {string|Date} dueDate
+ * @returns {boolean}
+ */
+App.isDueAlertWindow=dueDate=>{
+  if(!dueDate)return false;
+  const diff=App.daysDiff(dueDate);
+  return diff!==null&&diff>=-1&&diff<=1;
+};
+
+/**
+ * Month-key list for the "Specific Month" dropdown in Pending Fees (Feature 2).
+ * Builds keys (yyyy-mm) from a given month back to admission-era, deduped, descending.
+ * @param {string[]} dateStrings
+ * @returns {string[]}
+ */
+App.monthKeysFrom=dateStrings=>{
+  const keys=new Set();
+  (dateStrings||[]).forEach(d=>{if(d)keys.add(App.monthKey(d))});
+  return [...keys].sort().reverse();
+};
+
 App.csv=(name,rows)=>{const data=rows.map(r=>r.map(c=>'"'+String(c??"").replaceAll('"','""')+'"').join(",")).join("\n");const blob=new Blob([data],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)};App.saveToSheet=(type,payload)=>{const url=App.db.settings.appsScriptUrl;if(!url)return;fetch(url,{method:"POST",mode:"no-cors",body:JSON.stringify({type,payload})}).catch(()=>{})};
 App.navigate=(id,title)=>{App.$$(".view").forEach(v=>v.classList.toggle("active",v.id===id));App.$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));const h=App.$("#title");if(h)h.textContent=title||id;App.render()};App.render=()=>{};
