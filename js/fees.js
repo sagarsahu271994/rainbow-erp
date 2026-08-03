@@ -15,8 +15,25 @@ fill(){
   f.elements.monthly.readOnly=true; // Admin should not enter Monthly Fees manually
   if(!f.elements.fees.value)f.elements.fees.value=hasMonthlyFee?monthlyFee:'';
   if(!f.elements.total.value)f.elements.total.value=hasMonthlyFee?monthlyFee:'';
+  if(f.elements.month)this.populateMonthOptions(s);
   this.updatePendingPreview(s);
   if(!hasMonthlyFee&&App.toast)App.toast('Monthly Fee Not Set. Update it from Admission Edit.');
+},
+
+// Fills the "Fees For Month" dropdown with every month from the student's
+// admission date up to next month (so advance payment is possible), marks
+// each as Paid/Pending, and auto-selects the earliest month still unpaid.
+// forceMonth is used when editing an existing receipt so its original month
+// stays selectable/selected even if it's already marked Paid.
+populateMonthOptions(student,forceMonth){
+  const select=App.$('#feesForm')&&App.$('#feesForm').elements.month;
+  if(!select||!student)return;
+  let months=App.feeMonthRange?App.feeMonthRange(student,1):[];
+  if(forceMonth&&!months.includes(forceMonth)){months.push(forceMonth);months.sort()}
+  const paid=App.studentPaidMonths?App.studentPaidMonths(student):new Set();
+  select.innerHTML=months.map(m=>{const isPaid=paid.has(m)&&m!==forceMonth;return '<option value="'+m+'">'+App.esc(App.monthLabel(m))+(isPaid?' (Paid)':' (Pending)')+'</option>'}).join('');
+  const firstPending=months.find(m=>!paid.has(m)||m===forceMonth);
+  select.value=forceMonth||firstPending||months[months.length-1]||'';
 },
 
 updatePendingPreview(student){
@@ -25,8 +42,8 @@ updatePendingPreview(student){
   const s=student||App.studentByName(f.elements.studentName.value);
   if(!s)return;
   const monthlyFee=App.num(s.fees);
-  const m=App.monthKey?App.monthKey(App.today()):'';
-  const collectedThisMonth=App.db.fees.filter(x=>(x.studentId===s.id||App.norm(x.studentName)===App.norm(s.name))&&(App.monthKey?App.monthKey(x.date):'')===m).reduce((a,x)=>a+App.num(x.total),0);
+  const targetMonth=(f.elements.month&&f.elements.month.value)?f.elements.month.value:(App.monthKey?App.monthKey(App.today()):'');
+  const collectedThisMonth=App.db.fees.filter(x=>(x.studentId===s.id||App.norm(x.studentName)===App.norm(s.name))&&App.monthKey(x.month||x.date)===targetMonth).reduce((a,x)=>a+App.num(x.total),0);
   f.elements.pending.value=monthlyFee?Math.max(monthlyFee-collectedThisMonth,0):0;
 },
 
@@ -45,7 +62,9 @@ edit(id){
   const fee=App.db.fees.find(x=>x.id===id),f=App.$('#feesForm');
   Object.keys(fee).forEach(k=>{if(f.elements[k])f.elements[k].value=fee[k]});
   if(f.elements.monthly)f.elements.monthly.readOnly=true;
-  this.updatePendingPreview();
+  const student=App.studentByName(fee.studentName)||App.studentById(fee.studentId);
+  if(student&&f.elements.month)this.populateMonthOptions(student,fee.month||App.monthKey(fee.date));
+  this.updatePendingPreview(student);
   App.$('#feesSubmit').textContent='Update Receipt'
 },
 
