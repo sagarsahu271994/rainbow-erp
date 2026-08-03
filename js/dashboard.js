@@ -200,6 +200,34 @@ App.Dashboard = {
     App.$$('[data-pending-toggle-close]').forEach(btn => btn.onclick = () => this.toggleAlertClosed(btn.dataset.pendingToggleClose));
   },
 
+  // Walks through every pending student one at a time so each WhatsApp tab
+  // opens as a direct result of a click (browsers block auto-opened tabs
+  // that aren't tied to a user click, so this can't be done in one loop).
+  sendAllDue() {
+    const list = App.pendingStudents();
+    if (!list.length) return App.toast('No due reminders');
+    this.dueQueue = list;
+    this.dueIndex = 0;
+    this.renderDueQueueModal();
+  },
+
+  renderDueQueueModal() {
+    const total = this.dueQueue.length;
+    const s = this.dueQueue[this.dueIndex];
+    const modal = App.$('#modal');
+    if (!s) {
+      if (modal) modal.classList.remove('show');
+      App.toast('Due reminders queue finished.');
+      App.render();
+      return;
+    }
+    App.$('#modalBody').innerHTML = '<h2>Send Due Reminders</h2><p>Reminder ' + (this.dueIndex + 1) + ' of ' + total + '</p><div class="item"><div><b>' + App.esc(s.name) + '</b><br><small>' + App.esc(s.className || '-') + ' | ' + App.esc(s.mobile || '-') + ' | ' + this.money(s.pendingFees || s.fees) + '</small></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"><button id="dueQueueSend" class="green" type="button">Send WhatsApp &amp; Next</button><button id="dueQueueSkip" class="ghost" type="button">Skip</button><button id="dueQueueStop" class="red" type="button">Stop</button></div>';
+    if (modal) modal.classList.add('show');
+    App.$('#dueQueueSend').onclick = () => { App.whatsapp(s.mobile, this.reminderMessage(s)); this.dueIndex++; this.renderDueQueueModal(); };
+    App.$('#dueQueueSkip').onclick = () => { this.dueIndex++; this.renderDueQueueModal(); };
+    App.$('#dueQueueStop').onclick = () => { if (modal) modal.classList.remove('show'); };
+  },
+
   collectFee(id) {
     const s = App.studentById(id);
     if (!s) return;
