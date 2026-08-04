@@ -1,9 +1,9 @@
-App.Reports={rows(){return [['Students',App.db.students.length],['Admissions',App.db.admissions.length],['Receipts',App.db.fees.length],['Attendance',App.db.attendance.length],['Pending Students',App.pendingStudents().length]]},
+App.Reports={rows(){return [['Active Students',App.activeStudents().length],['Left/Inactive Students',App.db.students.length-App.activeStudents().length],['Admissions',App.db.admissions.length],['Receipts',App.db.fees.length],['Attendance',App.db.attendance.length],['Pending Students',App.pendingStudents().length]]},
 
 // Students with 2 or more unpaid months (from admission month up to the
 // current month, based on the explicit fee "month" — not payment date).
 defaulters(){
-  return App.db.students.map(s=>{
+  return App.activeStudents().map(s=>{
     const months=App.feeMonthRange?App.feeMonthRange(s,0):[];
     const paid=App.studentPaidMonths?App.studentPaidMonths(s):new Set();
     const pendingMonths=months.filter(m=>!paid.has(m));
@@ -25,7 +25,7 @@ renderDefaulters(){
 // Present / total attendance-marked days this month, per student.
 attendancePercent(){
   const m=App.monthKey(App.today());
-  return App.db.students.map(s=>{
+  return App.activeStudents().map(s=>{
     const records=App.db.attendance.filter(a=>(a.studentId===s.id||App.norm(a.student)===App.norm(s.name))&&App.monthKey(a.date)===m);
     const present=records.filter(a=>a.status==='Present').length;
     const total=records.length;
