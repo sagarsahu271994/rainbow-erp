@@ -346,7 +346,7 @@ App.Dashboard = {
     App.$('#monthlyCollection').textContent = App.rs(monthly);
     App.$('#pendingFees').textContent = this.money(pendingTotal);
     if (App.$('#pendingStudentsCount')) App.$('#pendingStudentsCount').textContent = pending.length + ' Students Pending';
-    App.$('#totalStudents').textContent = App.db.students.length;
+    App.$('#totalStudents').textContent = App.activeStudents().length;
     App.$('#todayAttendance').textContent = App.db.attendance.filter(a => a.date === t && a.status === 'Present').length;
     const detailsBtn = App.$('#pendingFeesDetailsBtn');
     if (detailsBtn) detailsBtn.onclick = () => this.openPendingFeesModal();
